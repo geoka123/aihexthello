@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <ctype.h>
+#include "client.h"
 
 /**********************************************************/
 Position gamePosition;		// Position we are going to use
@@ -16,6 +17,10 @@ Move myMove;				// move to save our choice and send it to the server
 char myColor;				// to store our color
 int mySocket;				// our socket
 char msg;					// used to store the received message
+
+int alphaBeta = 0; // 0 -> no pruning, 1 -> pruning on
+
+BState* curState;
 
 char * agentName = "MyAgent!";		//default name.. change it! keep in mind MAX_NAME_LENGTH
 
@@ -105,19 +110,24 @@ int main( int argc, char ** argv )
 
 /**********************************************************/
 // random player - not the most efficient implementation
-					while( 1 )
-					{
-						i = rand() % ARRAY_BOARD_SIZE;
-						j = rand() % ARRAY_BOARD_SIZE;
+				curState = (BState*)malloc(sizeof(BState));
+				curState->cur_board = gamePosition;
+				curState->currentPlayer = (myColor == BLACK) ? 1 : 0;
+				curState->lastMove = moveReceived;
+				
+				Node* root = create_node(&curState);
 
-						if( gamePosition.board[ i ][ j ] == EMPTY )
-						{
-							myMove.tile[ 0 ] = i;
-							myMove.tile[ 1 ] = j;
-							if( isLegalMove( &gamePosition, &myMove ) )
-								break;
-						}
-					}
+				generateChildren(root);
+
+				if (alphaBeta == 1)
+					myMove = findBestMoveab(root);
+				else
+					myMove = findBestMove(root);
+
+				if (!isLegalMove(&gamePosition, &myMove)) {
+					fprintf("%s", "qifsha ropt");
+					exit(EXIT_FAILURE);
+				}
 
 // end of random
 /**********************************************************/
@@ -139,8 +149,175 @@ int main( int argc, char ** argv )
 	return 0;
 }
 
+Node* create_node(BState* curState) {
+	Node* newNode = (Node*)malloc(sizeof(Node));
+	
+	if (newNode == NULL){
+		fprintf(stderr, "Memory allocation failed!\n");
+        exit(EXIT_FAILURE);
+	}
+
+	newNode->cur_bstate = *curState;
+	newNode->cur_evaluation = 0;
+	newNode->num_of_children = 0;
+
+	for (int i=0; i<MAX_CHILDREN; i++) {
+		newNode->children[i] = NULL;
+	}
+
+	return newNode;
+}
+
+void generateChildren(Node* root) {
+    for (int i = 0; i < ARRAY_BOARD_SIZE; i++) {
+        for (int j = 0; j < ARRAY_BOARD_SIZE; j++) {
+            if (root->cur_bstate.cur_board.board[i][j] != '4' && root->cur_bstate.cur_board.board[i][j] != '2') {
+                BState newState = root->cur_bstate;
+                newState.cur_board.board[i][j] = (root->cur_bstate.cur_board.board[i][j] == 1) ? '1' : 'O';
+                newState.currentPlayer = (root->cur_bstate.currentPlayer == 0) ? 1 : 0;
+                root->children[root->num_of_children++] = create_node(&newState);
+            }
+        }
+    }
+}
+
+void freeTree(Node* root) {
+    for (int i = 0; i < root->num_of_children; i++) {
+        freeTree(root->children[i]);
+    }
+	free(&root->cur_bstate);
+    free(root);
+
+}
+
+int evaluateBoard(BState* state){
+	int state_to_return = 0;
+	int black_count = 0;
+	int white_count = 0;
+
+	for (int i=0; i<ARRAY_BOARD_SIZE; i++){
+		for (int j=0; j<ARRAY_BOARD_SIZE; j++) {
+			if (state->cur_board.board[i][j] == 1)
+				black_count++;
+			else if (state->cur_board.board[i][j] == 0)
+				white_count++;
+		}
+	}
+
+	if (myColor == BLACK)
+		state_to_return = black_count - white_count;
+	else if (myColor == WHITE)
+		state_to_return = white_count - black_count;
+	
+	return state_to_return;
+}
+
+int minimaxab(Node* node, int depth, int alpha, int beta, int isMaximizing) {
+    if (depth == 0 || node->num_of_children == 0) {
+        return evaluateBoard(&node->cur_bstate);
+    }
+
+    if (isMaximizing) {
+        int maxEval = -10000;  // Negative infinity equivalent
+        for (int i = 0; i < node->num_of_children; i++) {
+            int eval = minimaxab(node->children[i], depth - 1, alpha, beta, 0);
+            if (eval > maxEval) {
+                maxEval = eval;
+            }
+            // Alpha-beta pruning
+            if (eval > alpha) {
+                alpha = eval;
+            }
+            if (beta <= alpha) {
+                break;  // Beta cut-off
+            }
+        }
+        return maxEval;
+    } else {
+        int minEval = 10000;  // Positive infinity equivalent
+        for (int i = 0; i < node->num_of_children; i++) {
+            int eval = minimaxab(node->children[i], depth - 1, alpha, beta, 1);
+            if (eval < minEval) {
+                minEval = eval;
+            }
+            // Alpha-beta pruning
+            if (eval < beta) {
+                beta = eval;
+            }
+            if (beta <= alpha) {
+                break;  // Alpha cut-off
+            }
+        }
+        return minEval;
+    }
+}
 
 
+int minimax(Node* node, int depth, int isMaximizing) {
+	if (depth == 0 || node->num_of_children == 0) {
+        return evaluateBoard(&node->cur_bstate);
+    }
 
+	if (isMaximizing) {
+		int maxEval = -10000;  // Negative infinity equivalent
+        for (int i = 0; i < node->num_of_children; i++) {
+            int eval = minimax(node->children[i], depth - 1, 0);
+            if (eval > maxEval) {
+                maxEval = eval;
+            }
+        }
+        return maxEval;
+	}
+	else {
+		int minEval = 10000;  // Positive infinity equivalent
+        for (int i = 0; i < node->num_of_children; i++) {
+            int eval = minimax(node->children[i], depth - 1, 1);
+            if (eval < minEval) {
+                minEval = eval;
+            }
+        }
+        return minEval;
+	}
+}
 
+Move findBestMove(Node* root) {
+	int bestValue = -10000;
+    Move bestMove;
+    
+    for (int i = 0; i < root->num_of_children; i++) {
+        int moveValue = minimax(root->children[i], MAX_DEPTH, 0);
+        
+        if (moveValue > bestValue) {
+            bestValue = moveValue;
+            bestMove.tile[0] = root->children[i]->cur_bstate.lastMove.tile[0];
+            bestMove.tile[1] = root->children[i]->cur_bstate.lastMove.tile[1];
+        }
+    }
+    
+    bestMove.color = myColor;
+    return bestMove;
+}
 
+Move findBestMoveab(Node* root) {
+    int bestValue = -10000;
+    int alpha = -10000, beta = 10000;
+    Move bestMove;
+    
+    for (int i = 0; i < root->num_of_children; i++) {
+        int moveValue = minimaxab(root->children[i], MAX_DEPTH, alpha, beta, 0);
+        
+        if (moveValue > bestValue) {
+            bestValue = moveValue;
+            bestMove.tile[0] = root->children[i]->cur_bstate.lastMove.tile[0];
+            bestMove.tile[1] = root->children[i]->cur_bstate.lastMove.tile[1];
+        }
+
+        // Update alpha with the best value found so far
+        if (moveValue > alpha) {
+            alpha = moveValue;
+        }
+    }
+    
+    bestMove.color = myColor;
+    return bestMove;
+}
