@@ -232,12 +232,22 @@ int evaluateBoard(BState* state){
 }
 
 int minimaxab(Node* node, int depth, int alpha, int beta, int isMaximizing) {
-    if (depth == 0 || node->num_of_children == 0) {
+    if (depth == 0) {
+        return evaluateBoard(&node->cur_bstate);
+    }
+
+    // Generate children only once per node
+    if (node->num_of_children == 0) {
+        generateChildren(node);
+    }
+
+    // If no children exist after generation, return evaluation (no valid moves)
+    if (node->num_of_children == 0) {
         return evaluateBoard(&node->cur_bstate);
     }
 
     if (isMaximizing) {
-        int maxEval = -10000;  // Negative infinity equivalent
+        int maxEval = -10000;  // Negative infinity
         for (int i = 0; i < node->num_of_children; i++) {
             int eval = minimaxab(node->children[i], depth - 1, alpha, beta, 0);
             if (eval > maxEval) {
@@ -248,12 +258,12 @@ int minimaxab(Node* node, int depth, int alpha, int beta, int isMaximizing) {
                 alpha = eval;
             }
             if (beta <= alpha) {
-                break;  // Beta cut-off
+                break;  // Beta cut-off (Pruning)
             }
         }
         return maxEval;
     } else {
-        int minEval = 10000;  // Positive infinity equivalent
+        int minEval = 10000;  // Positive infinity
         for (int i = 0; i < node->num_of_children; i++) {
             int eval = minimaxab(node->children[i], depth - 1, alpha, beta, 1);
             if (eval < minEval) {
@@ -264,7 +274,7 @@ int minimaxab(Node* node, int depth, int alpha, int beta, int isMaximizing) {
                 beta = eval;
             }
             if (beta <= alpha) {
-                break;  // Alpha cut-off
+                break;  // Alpha cut-off (Pruning)
             }
         }
         return minEval;
@@ -339,25 +349,42 @@ Move findBestMove(Node* root) {
 }
 
 Move findBestMoveab(Node* root) {
-    int bestValue = -10000;
-    int alpha = -10000, beta = 10000;
     Move bestMove;
-    
+    bestMove.tile[0] = -1;  // Default invalid move
+    bestMove.tile[1] = -1;
+    bestMove.color = myColor;
+
+    // Ensure children are generated
+    if (root->num_of_children == 0) {
+        generateChildren(root);
+    }
+
+    // If still no children after generation, return an invalid move
+    if (root->num_of_children == 0) {
+        return bestMove;
+    }
+
+    int bestValue = -10000;  // Negative infinity
+    int alpha = -10000, beta = 10000;
+
     for (int i = 0; i < root->num_of_children; i++) {
         int moveValue = minimaxab(root->children[i], MAX_DEPTH, alpha, beta, 0);
-        
+
         if (moveValue > bestValue) {
             bestValue = moveValue;
-            bestMove.tile[0] = root->children[i]->cur_bstate.lastMove.tile[0];
-            bestMove.tile[1] = root->children[i]->cur_bstate.lastMove.tile[1];
+            bestMove = root->children[i]->cur_bstate.lastMove;  // Directly assign the move
         }
 
         // Update alpha with the best value found so far
         if (moveValue > alpha) {
             alpha = moveValue;
         }
+
+        // Alpha-Beta Pruning: If the best value is already guaranteed, stop searching
+        if (beta <= alpha) {
+            break;
+        }
     }
-    
-    bestMove.color = myColor;
+
     return bestMove;
 }
