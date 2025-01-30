@@ -28,3 +28,5 @@ Node* create_node(BState* curState);
 int evaluateBoard(BState* state);
 
 Move findBestMove(Node* root);
+
+Move findBestMoveab(Node* root);
