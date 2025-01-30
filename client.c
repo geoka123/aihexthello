@@ -117,12 +117,12 @@ int main( int argc, char ** argv )
 				
 				Node* root = create_node(&curState);
 
-				generateChildren(root);
+				// generateChildren(root);
 
 				if (alphaBeta == 1)
-					myMove = findBestMoveab(root);
+					myMove = minimaxab(root, MAX_DEPTH, -10000, 10000, 1);
 				else
-					myMove = findBestMove(root)
+					myMove = minimax(root, MAX_DEPTH, 1)
 
 				if (!isLegalMove(&gamePosition, &myMove)) {
 					fprintf("%s", "qifsha ropt");
@@ -326,67 +326,67 @@ int minimax(Node* node, int depth, int isMaximizing) {
 
 }
 
-Move findBestMove(Node* root) {
-    Move bestMove;
-    bestMove.tile[0] = -1;  // Default invalid move
-    bestMove.tile[1] = -1;
-    bestMove.color = myColor;
+// Move findBestMove(Node* root) {
+//     Move bestMove;
+//     bestMove.tile[0] = -1;  // Default invalid move
+//     bestMove.tile[1] = -1;
+//     bestMove.color = myColor;
 
-    if (root->num_of_children == 0) {
-        return bestMove;  // No valid moves available
-    }
+//     if (root->num_of_children == 0) {
+//         return bestMove;  // No valid moves available
+//     }
 
-    int bestValue = -10000;  // Negative infinity
+//     int bestValue = -10000;  // Negative infinity
 
-    for (int i = 0; i < root->num_of_children; i++) {
-        int moveValue = minimax(root->children[i], MAX_DEPTH, 0);
+//     for (int i = 0; i < root->num_of_children; i++) {
+//         int moveValue = minimax(root->children[i], MAX_DEPTH, 0);
         
-        if (moveValue > bestValue) {
-            bestValue = moveValue;
-            bestMove = root->children[i]->cur_bstate.lastMove;  // Copy lastMove directly
-        }
-    }
+//         if (moveValue > bestValue) {
+//             bestValue = moveValue;
+//             bestMove = root->children[i]->cur_bstate.lastMove;  // Copy lastMove directly
+//         }
+//     }
 
-    return bestMove;
-}
+//     return bestMove;
+// }
 
-Move findBestMoveab(Node* root) {
-    Move bestMove;
-    bestMove.tile[0] = -1;  // Default invalid move
-    bestMove.tile[1] = -1;
-    bestMove.color = myColor;
+// Move findBestMoveab(Node* root) {
+//     Move bestMove;
+//     bestMove.tile[0] = -1;  // Default invalid move
+//     bestMove.tile[1] = -1;
+//     bestMove.color = myColor;
 
-    // Ensure children are generated
-    if (root->num_of_children == 0) {
-        generateChildren(root);
-    }
+//     // Ensure children are generated
+//     if (root->num_of_children == 0) {
+//         generateChildren(root);
+//     }
 
-    // If still no children after generation, return an invalid move
-    if (root->num_of_children == 0) {
-        return bestMove;
-    }
+//     // If still no children after generation, return an invalid move
+//     if (root->num_of_children == 0) {
+//         return bestMove;
+//     }
 
-    int bestValue = -10000;  // Negative infinity
-    int alpha = -10000, beta = 10000;
+//     int bestValue = -10000;  // Negative infinity
+//     int alpha = -10000, beta = 10000;
 
-    for (int i = 0; i < root->num_of_children; i++) {
-        int moveValue = minimaxab(root->children[i], MAX_DEPTH, alpha, beta, 0);
+//     for (int i = 0; i < root->num_of_children; i++) {
+//         int moveValue = minimaxab(root->children[i], MAX_DEPTH, alpha, beta, 0);
 
-        if (moveValue > bestValue) {
-            bestValue = moveValue;
-            bestMove = root->children[i]->cur_bstate.lastMove;  // Directly assign the move
-        }
+//         if (moveValue > bestValue) {
+//             bestValue = moveValue;
+//             bestMove = root->children[i]->cur_bstate.lastMove;  // Directly assign the move
+//         }
 
-        // Update alpha with the best value found so far
-        if (moveValue > alpha) {
-            alpha = moveValue;
-        }
+//         // Update alpha with the best value found so far
+//         if (moveValue > alpha) {
+//             alpha = moveValue;
+//         }
 
-        // Alpha-Beta Pruning: If the best value is already guaranteed, stop searching
-        if (beta <= alpha) {
-            break;
-        }
-    }
+//         // Alpha-Beta Pruning: If the best value is already guaranteed, stop searching
+//         if (beta <= alpha) {
+//             break;
+//         }
+//     }
 
-    return bestMove;
-}
+//     return bestMove;
+// }
