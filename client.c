@@ -229,9 +229,9 @@ int evaluateBoard(BState* state){
 		}
 	}
 
-	if (myColor == BLACK)
+	if (curState->currentPlayer == 1)
 		state_to_return = black_count - white_count;
-	else if (myColor == WHITE)
+	else if (curState->currentPlayer == 0)
 		state_to_return = white_count - black_count;
 	
 	return state_to_return;
