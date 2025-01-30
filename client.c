@@ -18,7 +18,7 @@ char myColor;				// to store our color
 int mySocket;				// our socket
 char msg;					// used to store the received message
 
-int alphaBeta = 0; // 0 -> no pruning, 1 -> pruning on
+int alphaBeta = 1; // 0 -> no pruning, 1 -> pruning on
 
 BState* curState;
 
