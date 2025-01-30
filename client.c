@@ -122,7 +122,7 @@ int main( int argc, char ** argv )
 				if (alphaBeta == 1)
 					myMove = findBestMoveab(root);
 				else
-					myMove = findBestMove(root)
+					myMove = findBestMove(root);
 
 				if (!isLegalMove(&gamePosition, &myMove)) {
 					fprintf("%s", "qifsha ropt");
@@ -332,10 +332,6 @@ Move findBestMove(Node* root) {
     bestMove.tile[1] = -1;
     bestMove.color = myColor;
 
-    if (root->num_of_children == 0) {
-        return bestMove;  // No valid moves available
-    }
-
     int bestValue = -10000;  // Negative infinity
 
     for (int i = 0; i < root->num_of_children; i++) {
@@ -355,11 +351,6 @@ Move findBestMoveab(Node* root) {
     bestMove.tile[0] = -1;  // Default invalid move
     bestMove.tile[1] = -1;
     bestMove.color = myColor;
-
-    // If still no children after generation, return an invalid move
-    if (root->num_of_children == 0) {
-        return bestMove;
-    }
 
     int bestValue = -10000;  // Negative infinity
     int alpha = -10000, beta = 10000;
