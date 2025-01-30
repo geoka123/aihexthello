@@ -119,11 +119,15 @@ int main( int argc, char ** argv )
 
 				generateChildren(root);
 
+				time_t start_time;
+				time(&start_time);
 				if (alphaBeta == 1)
 					myMove = findBestMoveab(root);
 				else
 					myMove = findBestMove(root);
 
+				time_t end_time;
+				time(&end_time);
 				if (!isLegalMove(&gamePosition, &myMove)) {
 					fprintf("%s", "qifsha ropt");
 					exit(EXIT_FAILURE);
