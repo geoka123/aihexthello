@@ -8,11 +8,11 @@
 #include <ctype.h>
 
 #define MAX_CHILDREN 5
-#define MAX_DEPTH 3
+#define MAX_DEPTH 5
 
 typedef struct {
     Position cur_board; // Game board
-    int currentPlayer; // 1 or 0 to indicate current player
+    int currentPlayer; // 1 or 0 to indicate current player / 1 is black and 0 is white
     Move lastMove;
 } BState;
 

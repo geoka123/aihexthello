@@ -171,11 +171,30 @@ Node* create_node(BState* curState) {
 void generateChildren(Node* root) {
     for (int i = 0; i < ARRAY_BOARD_SIZE; i++) {
         for (int j = 0; j < ARRAY_BOARD_SIZE; j++) {
-            if (root->cur_bstate.cur_board.board[i][j] != '4' && root->cur_bstate.cur_board.board[i][j] != '2') {
-                BState newState = root->cur_bstate;
-                newState.cur_board.board[i][j] = (root->cur_bstate.cur_board.board[i][j] == 1) ? '1' : 'O';
-                newState.currentPlayer = (root->cur_bstate.currentPlayer == 0) ? 1 : 0;
-                root->children[root->num_of_children++] = create_node(&newState);
+            // Check if the cell is empty and a legal move
+            if (root->cur_bstate.cur_board.board[i][j] == '2') {
+                Move move;
+                move.tile[0] = i;
+                move.tile[1] = j;
+                move.color = (root->cur_bstate.currentPlayer == 0) ? 0 : 1;  // Assign the current player's color
+
+                // Validate if this move is legal
+                if (isLegalMove(root->cur_bstate.cur_board, move)) {
+                    // Copy the current state
+                    BState newState = root->cur_bstate;
+
+                    // Apply the move
+                    newState.cur_board.board[i][j] = (root->cur_bstate.currentPlayer == 0) ? '0' : '1';
+
+                    // Switch turn
+                    newState.currentPlayer = (root->cur_bstate.currentPlayer == 0) ? 1 : 0;
+
+                    // Store the move position
+                    newState.lastMove = move;
+
+                    // Create a new child node
+                    root->children[root->num_of_children++] = create_node(&newState);
+                }
             }
         }
     }
@@ -254,47 +273,58 @@ int minimaxab(Node* node, int depth, int alpha, int beta, int isMaximizing) {
 
 
 int minimax(Node* node, int depth, int isMaximizing) {
-	if (depth == 0 || node->num_of_children == 0) {
+    if (depth == 0 || node->num_of_children == 0) {
         return evaluateBoard(&node->cur_bstate);
     }
 
-	if (isMaximizing) {
-		int maxEval = -10000;  // Negative infinity equivalent
+    // If maximizing player
+    if (isMaximizing) {
+        int bestEval = -10000;  // Negative infinity
         for (int i = 0; i < node->num_of_children; i++) {
             int eval = minimax(node->children[i], depth - 1, 0);
-            if (eval > maxEval) {
-                maxEval = eval;
+            if (eval > bestEval) {
+                bestEval = eval;
             }
+            if (bestEval == 10000) break;  // Prune if best move found
         }
-        return maxEval;
-	}
-	else {
-		int minEval = 10000;  // Positive infinity equivalent
+        return bestEval;
+    }
+    // If minimizing player
+    else {
+        int bestEval = 10000;  // Positive infinity
         for (int i = 0; i < node->num_of_children; i++) {
             int eval = minimax(node->children[i], depth - 1, 1);
-            if (eval < minEval) {
-                minEval = eval;
+            if (eval < bestEval) {
+                bestEval = eval;
             }
+            if (bestEval == -10000) break;  // Prune if worst move found
         }
-        return minEval;
-	}
+        return bestEval;
+    }
+
 }
 
 Move findBestMove(Node* root) {
-	int bestValue = -10000;
     Move bestMove;
-    
+    bestMove.tile[0] = -1;  // Default invalid move
+    bestMove.tile[1] = -1;
+    bestMove.color = myColor;
+
+    if (root->num_of_children == 0) {
+        return bestMove;  // No valid moves available
+    }
+
+    int bestValue = -10000;  // Negative infinity
+
     for (int i = 0; i < root->num_of_children; i++) {
         int moveValue = minimax(root->children[i], MAX_DEPTH, 0);
         
         if (moveValue > bestValue) {
             bestValue = moveValue;
-            bestMove.tile[0] = root->children[i]->cur_bstate.lastMove.tile[0];
-            bestMove.tile[1] = root->children[i]->cur_bstate.lastMove.tile[1];
+            bestMove = root->children[i]->cur_bstate.lastMove;  // Copy lastMove directly
         }
     }
-    
-    bestMove.color = myColor;
+
     return bestMove;
 }
 
