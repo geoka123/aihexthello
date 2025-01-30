@@ -119,9 +119,9 @@ int main( int argc, char ** argv )
 
 				generateChildren(root);
 
-				if (alphaBeta == 1)
-					myMove = findBestMoveab(root);
-				else
+				// if (alphaBeta == 1)
+				// 	myMove = findBestMoveab(root);
+				// else
 					myMove = findBestMove(root);
 
 				if (!isLegalMove(&gamePosition, &myMove)) {
@@ -179,21 +179,23 @@ void generateChildren(Node* root) {
                 move.color = (root->cur_bstate.currentPlayer == 0) ? 0 : 1;  // Assign the current player's color
 
                 // Validate if this move is legal
-                if (isLegalMove(root->cur_bstate.cur_board, move)) && (root->num_of_children < MAX_CHILDREN){
-                    // Copy the current state
-                    BState newState = root->cur_bstate;
+                if (isLegalMove(&root->cur_bstate.cur_board, &move)){
+					if (&root->num_of_children < MAX_CHILDREN) {
+						// Copy the current state
+						BState newState = root->cur_bstate;
 
-                    // Apply the move
-                    newState.cur_board.board[i][j] = (root->cur_bstate.currentPlayer == 0) ? '0' : '1';
+						// Apply the move
+						newState.cur_board.board[i][j] = (root->cur_bstate.currentPlayer == 0) ? '0' : '1';
 
-                    // Switch turn
-                    newState.currentPlayer = (root->cur_bstate.currentPlayer == 0) ? 1 : 0;
+						// Switch turn
+						newState.currentPlayer = (root->cur_bstate.currentPlayer == 0) ? 1 : 0;
 
-                    // Store the move position
-                    newState.lastMove = move;
+						// Store the move position
+						newState.lastMove = move;
 
-                    // Create a new child node
-                    root->children[root->num_of_children++] = create_node(&newState);
+						// Create a new child node
+						root->children[root->num_of_children++] = create_node(&newState);
+					}
                 }
             }
         }
