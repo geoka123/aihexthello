@@ -122,9 +122,9 @@ int main( int argc, char ** argv )
 				time_t start_time;
 				time(&start_time);
 				if (alphaBeta == 1)
-					myMove = findBestMoveab(root);
+					myMove = minimaxab(root, MAX_DEPTH, -10000, 10000, 1);
 				else
-					myMove = findBestMove(root);
+					myMove = minimax(root, MAX_DEPTH, 1);
 
 				time_t end_time;
 				time(&end_time);
@@ -237,7 +237,7 @@ int evaluateBoard(BState* state){
 	return state_to_return;
 }
 
-int minimaxab(Node* node, int depth, int alpha, int beta, int isMaximizing) {
+Move minimaxab(Node* node, int depth, int alpha, int beta, int isMaximizing) {
     if (depth == 0) {
         return evaluateBoard(&node->cur_bstate);
     }
@@ -253,11 +253,13 @@ int minimaxab(Node* node, int depth, int alpha, int beta, int isMaximizing) {
     }
 
     if (isMaximizing) {
+		Move bestMove;
         int maxEval = -10000;  // Negative infinity
         for (int i = 0; i < node->num_of_children; i++) {
             int eval = minimaxab(node->children[i], depth - 1, alpha, beta, 0);
             if (eval > maxEval) {
                 maxEval = eval;
+				bestMove = node->children[i]->cur_bstate.lastMove;
             }
             // Alpha-beta pruning
             if (eval > alpha) {
@@ -269,11 +271,13 @@ int minimaxab(Node* node, int depth, int alpha, int beta, int isMaximizing) {
         }
         return maxEval;
     } else {
+		Move bestMove;
         int minEval = 10000;  // Positive infinity
         for (int i = 0; i < node->num_of_children; i++) {
             int eval = minimaxab(node->children[i], depth - 1, alpha, beta, 1);
             if (eval < minEval) {
                 minEval = eval;
+				bestMove = node->children[i]->cur_bstate.lastMove;
             }
             // Alpha-beta pruning
             if (eval < beta) {
@@ -288,7 +292,7 @@ int minimaxab(Node* node, int depth, int alpha, int beta, int isMaximizing) {
 }
 
 
-int minimax(Node* node, int depth, int isMaximizing) {
+Move minimax(Node* node, int depth, int isMaximizing) {
     if (depth == 0) {
         return evaluateBoard(&node->cur_bstate);
     }
@@ -305,78 +309,82 @@ int minimax(Node* node, int depth, int isMaximizing) {
 
     // If maximizing player
     if (isMaximizing) {
+		Move bestMove;
         int bestEval = -10000;  // Negative infinity
         for (int i = 0; i < node->num_of_children; i++) {
             int eval = minimax(node->children[i], depth - 1, 0);
             if (eval > bestEval) {
                 bestEval = eval;
+				bestMove = node->children[i]->cur_bstate.lastMove;
             }
             if (bestEval == 10000) break;  // Prune if best move found
         }
-        return bestEval;
+        return bestMove;
     }
     // If minimizing player
     else {
+		Move bestMove;
         int bestEval = 10000;  // Positive infinity
         for (int i = 0; i < node->num_of_children; i++) {
             int eval = minimax(node->children[i], depth - 1, 1);
             if (eval < bestEval) {
                 bestEval = eval;
+				bestMove = node->children[i]->cur_bstate.lastMove;
             }
             if (bestEval == -10000) break;  // Prune if worst move found
         }
-        return bestEval;
+        return bestMove;
     }
 
 }
 
 Move findBestMove(Node* root) {
-    Move bestMove;
-    bestMove.tile[0] = -1;  // Default invalid move
-    bestMove.tile[1] = -1;
-    bestMove.color = myColor;
+//     Move bestMove;
+//     bestMove.tile[0] = -1;  // Default invalid move
+//     bestMove.tile[1] = -1;
+//     bestMove.color = myColor;
 
-    int bestValue = -10000;  // Negative infinity
+//     int bestValue = -10000;  // Negative infinity
 
-    for (int i = 0; i < root->num_of_children; i++) {
-        int moveValue = minimax(root->children[i], MAX_DEPTH, 0);
+//     for (int i = 0; i < root->num_of_children; i++) {
+//         int moveValue = minimax(root->children[i], MAX_DEPTH, 0);
         
-        if (moveValue > bestValue) {
-            bestValue = moveValue;
-            bestMove = root->children[i]->cur_bstate.lastMove;  // Copy lastMove directly
-        }
-    }
+//         if (moveValue > bestValue) {
+//             bestValue = moveValue;
+//             bestMove = root->children[i]->cur_bstate.lastMove;  // Copy lastMove directly
+//         }
+//     }
 
-    return bestMove;
-}
+//     return bestMove;
+// }
 
-Move findBestMoveab(Node* root) {
-    Move bestMove;
-    bestMove.tile[0] = -1;  // Default invalid move
-    bestMove.tile[1] = -1;
-    bestMove.color = myColor;
+// Move findBestMoveab(Node* root) {
+//     Move bestMove;
+//     bestMove.tile[0] = -1;  // Default invalid move
+//     bestMove.tile[1] = -1;
+//     bestMove.color = myColor;
 
-    int bestValue = -10000;  // Negative infinity
-    int alpha = -10000, beta = 10000;
+//     int bestValue = -10000;  // Negative infinity
+//     int alpha = -10000, beta = 10000;
 
-    for (int i = 0; i < root->num_of_children; i++) {
-        int moveValue = minimaxab(root->children[i], MAX_DEPTH, alpha, beta, 0);
+//     for (int i = 0; i < root->num_of_children; i++) {
+//         int moveValue = minimaxab(root->children[i], MAX_DEPTH, alpha, beta, 0);
 
-        if (moveValue > bestValue) {
-            bestValue = moveValue;
-            bestMove = root->children[i]->cur_bstate.lastMove;  // Directly assign the move
-        }
+//         if (moveValue > bestValue) {
+//             bestValue = moveValue;
+//             bestMove = root->children[i]->cur_bstate.lastMove;  // Directly assign the move
+//         }
 
-        // Update alpha with the best value found so far
-        if (moveValue > alpha) {
-            alpha = moveValue;
-        }
+//         // Update alpha with the best value found so far
+//         if (moveValue > alpha) {
+//             alpha = moveValue;
+//         }
 
-        // Alpha-Beta Pruning: If the best value is already guaranteed, stop searching
-        if (beta <= alpha) {
-            break;
-        }
-    }
+//         // Alpha-Beta Pruning: If the best value is already guaranteed, stop searching
+//         if (beta <= alpha) {
+//             break;
+//         }
+//     }
 
-    return bestMove;
-}
+//     return bestMove;
+// }
