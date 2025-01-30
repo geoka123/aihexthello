@@ -179,7 +179,7 @@ void generateChildren(Node* root) {
                 move.color = (root->cur_bstate.currentPlayer == 0) ? 0 : 1;  // Assign the current player's color
 
                 // Validate if this move is legal
-                if (isLegalMove(root->cur_bstate.cur_board, move)) {
+                if (isLegalMove(root->cur_bstate.cur_board, move)) && (root->num_of_children < MAX_CHILDREN){
                     // Copy the current state
                     BState newState = root->cur_bstate;
 
@@ -273,7 +273,17 @@ int minimaxab(Node* node, int depth, int alpha, int beta, int isMaximizing) {
 
 
 int minimax(Node* node, int depth, int isMaximizing) {
-    if (depth == 0 || node->num_of_children == 0) {
+    if (depth == 0) {
+        return evaluateBoard(&node->cur_bstate);
+    }
+
+    // Only generate children once per node
+    if (node->num_of_children == 0) {
+        generateChildren(node);
+    }
+
+    // If still no children after generation, return evaluation (no valid moves)
+    if (node->num_of_children == 0) {
         return evaluateBoard(&node->cur_bstate);
     }
 
