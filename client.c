@@ -119,7 +119,10 @@ int main( int argc, char ** argv )
 
 				generateChildren(root);
 
-				myMove = findBestMoveab(root);
+				if (alphaBeta == 1)
+					myMove = findBestMoveab(root);
+				else
+					myMove = findBestMove(root)
 
 				if (!isLegalMove(&gamePosition, &myMove)) {
 					fprintf("%s", "qifsha ropt");
